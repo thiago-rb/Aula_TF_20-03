@@ -1,62 +1,29 @@
-from flask import Flask, request, jsonify
-import psycopg2
-import os
+from flask import Flask
+from routes.aluno import aluno_bp
+from routes.turma import turma_bp
+from routes.professor import professor_bp
+from routes.pagamento import pagamento_bp
+from routes.presenca import presenca_bp
+from routes.atividade import atividade_bp
+from routes.atividade_aluno import atividade_aluno_bp
+from routes.usuario import usuario_bp
 
 app = Flask(__name__)
 
-# Configurações do banco de dados
-DB_CONFIG = {
-    "dbname": "escola",
-    "user": "postgres",
-    "password": "postgres",
-    "host": "db",
-    "port": "5432"
-}
+# Registro dos blueprints para cada CRUD
+app.register_blueprint(aluno_bp, url_prefix='/alunos')
+app.register_blueprint(turma_bp, url_prefix='/turmas')
+app.register_blueprint(professor_bp, url_prefix='/professores')
+app.register_blueprint(pagamento_bp, url_prefix='/pagamentos')
+app.register_blueprint(presenca_bp, url_prefix='/presencas')
+app.register_blueprint(atividade_bp, url_prefix='/atividades')
+app.register_blueprint(atividade_aluno_bp, url_prefix='/atividades_alunos')
+app.register_blueprint(usuario_bp, url_prefix='/usuarios')
 
-def connect_db():
-    return psycopg2.connect(**DB_CONFIG)
-
-@app.route('/alunos', methods=['GET'])
-def listar_alunos():
-    with connect_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM alunos;")
-        alunos = cursor.fetchall()
-    return jsonify(alunos)
-
-@app.route('/alunos', methods=['POST'])
-def cadastrar_aluno():
-    data = request.get_json()
-    with connect_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO alunos (aluno_id, nome, endereco, cidade, estado, cep, pais, telefone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-            (data['aluno_id'], data['nome'], data.get('endereco'), data.get('cidade'),
-             data.get('estado'), data.get('cep'), data.get('pais'), data.get('telefone'))
-        )
-        conn.commit()
-    return jsonify({"message": "Aluno cadastrado com sucesso!"}), 201
-
-@app.route('/alunos/<id>', methods=['PUT'])
-def atualizar_aluno(id):
-    data = request.get_json()
-    with connect_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE alunos SET nome = %s, endereco = %s, cidade = %s, estado = %s, cep = %s, pais = %s, telefone = %s WHERE aluno_id = %s",
-            (data['nome'], data.get('endereco'), data.get('cidade'), data.get('estado'),
-             data.get('cep'), data.get('pais'), data.get('telefone'), id)
-        )
-        conn.commit()
-    return jsonify({"message": "Aluno atualizado com sucesso!"})
-
-@app.route('/alunos/<id>', methods=['DELETE'])
-def excluir_aluno(id):
-    with connect_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM alunos WHERE aluno_id = %s", (id,))
-        conn.commit()
-    return jsonify({"message": "Aluno excluído com sucesso!"})
+# Rota de teste para verificar se o servidor está funcionando
+@app.route('/', methods=['GET'])
+def index():
+    return {"message": "API do sistema de gerenciamento escolar está funcionando!"}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
