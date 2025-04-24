@@ -27,3 +27,60 @@ INSERT INTO alunos (aluno_id, nome, endereco, cidade, estado, cep, pais, telefon
 ('009', 'Rafael Almeida', 'Rua Cambucá', 'Recife', 'PE', '09009-000', 'Brasil', '901122334'),
 ('010', 'Fernanda Souza', 'Rua Damasco', 'Porto Alegre', 'RS', '10010-000', 'Brasil', '923123123')
 ON CONFLICT (aluno_id) DO NOTHING;
+
+CREATE TABLE Turma (
+    id_turma INT AUTO_INCREMENT PRIMARY KEY,
+    nome_turma VARCHAR(50) NOT NULL,
+    id_professor INT,
+    horario VARCHAR(100),
+    FOREIGN KEY (id_professor) REFERENCES Professor(id_professor)
+);
+
+CREATE TABLE Professor (
+    id_professor INT AUTO_INCREMENT PRIMARY KEY,
+    nome_completo VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    telefone VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE Pagamento (
+    id_pagamento INT AUTO_INCREMENT PRIMARY KEY,
+    id_aluno INT,
+    data_pagamento DATE NOT NULL,
+    valor_pago DECIMAL(10,2) NOT NULL,
+    forma_pagamento VARCHAR(50),
+    referencia VARCHAR(100),
+    status VARCHAR(20),
+    FOREIGN KEY (id_aluno) REFERENCES Aluno(id_aluno)
+);
+
+CREATE TABLE Presenca (
+    id_presenca INT AUTO_INCREMENT PRIMARY KEY,
+    id_aluno INT,
+    data_presenca DATE NOT NULL,
+    presente BOOLEAN NOT NULL,
+    FOREIGN KEY (id_aluno) REFERENCES Aluno(id_aluno)
+);
+
+CREATE TABLE Atividade (
+    id_atividade INT AUTO_INCREMENT PRIMARY KEY,
+    descricao TEXT NOT NULL,
+    data_realizacao DATE NOT NULL
+);
+
+CREATE TABLE Atividade_Aluno (
+    id_atividade INT,
+    id_aluno INT,
+    PRIMARY KEY (id_atividade, id_aluno),
+    FOREIGN KEY (id_atividade) REFERENCES Atividade(id_atividade),
+    FOREIGN KEY (id_aluno) REFERENCES Aluno(id_aluno)
+);
+
+CREATE TABLE Usuario (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(50) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    nivel_acesso VARCHAR(20),
+    id_professor INT,
+    FOREIGN KEY (id_professor) REFERENCES Professor(id_professor)
+);
