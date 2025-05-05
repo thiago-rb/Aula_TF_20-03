@@ -8,59 +8,93 @@ def client():
     with app.test_client() as client:
         yield client
 
-@patch('app.connect_db')  # Mock para simular a função de conexão com o banco
+# Testes para Aluno
+@patch('routes.aluno.connect_db')
 def test_listar_alunos(mock_connect_db, client):
-    # Simulando retorno do banco de dados
-    mock_connect_db.return_value.__enter__.return_value.cursor.return_value.fetchall.return_value = [
-        ("001", "João Silva", "Rua Agosto", "São Paulo", "SP", "01001-000", "Brasil", "923456789"),
-        ("002", "Maria Lima", "Rua Fernando Salles", "São Paulo", "SP", "02002-000", "Brasil", "987654321"),
+    mock_connect_db.return_value.cursor.return_value.fetchall.return_value = [
+        (1, "João Silva", "2010-05-22", 1, "Maria Silva", "11987654322", "maria.silva@gmail.com", "Sem alergias")
     ]
-    response = client.get('/alunos')
+    response = client.get('/alunos/')
     assert response.status_code == 200
-    assert len(response.json) == 2
+    assert len(response.json) == 1
 
-@patch('app.connect_db')  # Mock para simular a função de conexão com o banco
-def test_cadastrar_aluno(mock_connect_db, client):
-    response_mock = mock_connect_db.return_value.__enter__.return_value.cursor.return_value
-    response_mock.rowcount = 1  # Simula que uma linha foi inserida
-
-    novo_aluno = {
-        "aluno_id": "011",
-        "nome": "Novo Aluno",
-        "endereco": "Rua Teste",
-        "cidade": "Teste City",
-        "estado": "TS",
-        "cep": "11111-111",
-        "pais": "Brasil",
-        "telefone": "123456789"
-    }
-    response = client.post('/alunos', json=novo_aluno)
+@patch('routes.aluno.connect_db')
+def test_criar_aluno(mock_connect_db, client):
+    mock_connect_db.return_value.cursor.return_value.rowcount = 1
+    response = client.post('/alunos/', json={
+        "nome_completo": "Maria Oliveira",
+        "data_nascimento": "2010-08-15",
+        "id_turma": 1,
+        "nome_responsavel": "Ana Oliveira",
+        "telefone_responsavel": "11987654321",
+        "email_responsavel": "ana.oliveira@gmail.com",
+        "informacoes_adicionais": "Sem alergias"
+    })
     assert response.status_code == 201
-    assert response.json["message"] == "Aluno cadastrado com sucesso!"
+    assert response.json['message'] == "Aluno criado com sucesso!"
 
-@patch('app.connect_db')  # Mock para simular a função de conexão com o banco
+@patch('routes.aluno.connect_db')
 def test_atualizar_aluno(mock_connect_db, client):
-    response_mock = mock_connect_db.return_value.__enter__.return_value.cursor.return_value
-    response_mock.rowcount = 1  # Simula que uma linha foi atualizada
-
-    aluno_atualizado = {
-        "nome": "Aluno Atualizado",
-        "endereco": "Rua Atualizada",
-        "cidade": "Atual City",
-        "estado": "AT",
-        "cep": "22222-222",
-        "pais": "Brasil",
-        "telefone": "987654321"
-    }
-    response = client.put('/alunos/011', json=aluno_atualizado)
+    mock_connect_db.return_value.cursor.return_value.rowcount = 1
+    response = client.put('/alunos/1', json={
+        "nome_completo": "João Silva Atualizado",
+        "data_nascimento": "2010-05-22",
+        "id_turma": 2,
+        "nome_responsavel": "Maria Silva",
+        "telefone_responsavel": "11987654322",
+        "email_responsavel": "maria.silva@gmail.com",
+        "informacoes_adicionais": "Atualizado"
+    })
     assert response.status_code == 200
-    assert response.json["message"] == "Aluno atualizado com sucesso!"
+    assert response.json['message'] == "Aluno atualizado com sucesso!"
 
-@patch('app.connect_db')  # Mock para simular a função de conexão com o banco
+@patch('routes.aluno.connect_db')
 def test_excluir_aluno(mock_connect_db, client):
-    response_mock = mock_connect_db.return_value.__enter__.return_value.cursor.return_value
-    response_mock.rowcount = 1  # Simula que uma linha foi excluída
-
-    response = client.delete('/alunos/011')
+    mock_connect_db.return_value.cursor.return_value.rowcount = 1
+    response = client.delete('/alunos/1')
     assert response.status_code == 200
-    assert response.json["message"] == "Aluno excluído com sucesso!"
+    assert response.json['message'] == "Aluno excluído com sucesso!"
+
+# Testes para Turma
+@patch('routes.turma.connect_db')
+def test_listar_turmas(mock_connect_db, client):
+    mock_connect_db.return_value.cursor.return_value.fetchall.return_value = [
+        (1, "Turma A", 1, "08:00 - 12:00")
+    ]
+    response = client.get('/turmas/')
+    assert response.status_code == 200
+    assert len(response.json) == 1
+
+# Outros testes (Turma, Professor, Pagamento, etc.)
+# Repita os mesmos padrões acima para as entidades restantes:
+# - Criação (`POST`)
+# - Atualização (`PUT`)
+# - Exclusão (`DELETE`)
+
+@patch('routes.usuario.connect_db')
+def test_listar_usuarios(mock_connect_db, client):
+    mock_connect_db.return_value.cursor.return_value.fetchall.return_value = [
+        (1, "admin", "hashed_password", "administrador", None)
+    ]
+    response = client.get('/usuarios/')
+    assert response.status_code == 200
+    assert len(response.json) == 1
+
+@patch('routes.usuario.connect_db')
+def test_criar_usuario(mock_connect_db, client):
+    mock_connect_db.return_value.cursor.return_value.rowcount = 1
+    response = client.post('/usuarios/', json={
+        "login": "novo_usuario",
+        "senha": "nova_senha",
+        "nivel_acesso": "professor",
+        "id_professor": 1
+    })
+    assert response.status_code == 201
+    assert response.json['message'] == "Usuário criado com sucesso!"
+
+@patch('routes.usuario.connect_db')
+def test_excluir_usuario(mock_connect_db, client):
+    mock_connect_db.return_value.cursor.return_value.rowcount = 1
+    response = client.delete('/usuarios/1')
+    assert response.status_code == 200
+    assert response.json['message'] == "Usuário excluído com sucesso!"
